@@ -1,0 +1,72 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+body {
+  height: 100dvh;
+  width: 100dvw;
+  display: flex;
+  flex-direction: column;
+}
+nav {
+  height: 10dvh;
+  width: 100dvw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: gray;
+}
+input {
+  border: none;
+  border-radius: 10px;
+  height: 2rem;
+  padding-left: 10px;
+}
+.nbar {
+  padding: 0 5dvw 0 5dvw;
+}
+div > .nbar {
+  display: flex;
+  gap: 20px;
+}
+.login-wrap {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.login {
+  font-size: 1.5rem;
+  color: white;
+  height: 4rem;
+  width: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+  background-color: gray;
+  border: 3px solid black;
+  border-radius: 10px;
+}
+.btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0px 30px;
+  color: white;
+  background-color: rgb(197, 113, 127);
+  font-size: 1.5rem;
+  font-weight: bold;
+  border-radius: 10px;
+  border: none;
+  height: 2rem;
+}
+.btn:hover {
+  background-color: rgb(179, 100, 113);
+  cursor: pointer;
+}
+.btn:active {
+  background-color: rgb(197, 113, 127);
+}

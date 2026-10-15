@@ -1,0 +1,27 @@
+{
+  "name": "csb-mooc-project",
+  "version": "1.0.0",
+  "description": "The final project for the CSB MOOC course",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zraycd/CSB-MOOC-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zraycd/CSB-MOOC-project/issues"
+  },
+  "homepage": "https://github.com/zraycd/CSB-MOOC-project#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^13.0.3",
+    "ejs": "^7.0.1",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0"
+  }
+}
