@@ -1,8 +1,8 @@
 import Database from "better-sqlite3";
-import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { hashPassword } from "./passwords.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const uploadsDir = path.join(__dirname, "uploads");
@@ -93,6 +93,18 @@ export function createBook(ownerId, title, filename, isPublic = 0) {
 export function getPublicBooks() {
   return selectPublicBooks.all();
 }
+export function getBookByIdUnsafe(id) {
+  return db
+    .prepare(
+      `
+    SELECT books.*, users.username AS owner
+    FROM books
+    JOIN users ON users.id = books.owner_id
+    WHERE books.id = ${id}
+  `,
+    )
+    .get();
+}
 
 const EMPTY_PDF = `%PDF-1.4
 1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
@@ -114,7 +126,7 @@ function seed() {
   fs.mkdirSync(uploadsDir, { recursive: true });
 
   for (const u of SEED_USERS) {
-    const hash = bcrypt.hashSync(u.password, 12);
+    const hash = hashPassword(u.password);
     const { lastInsertRowid: userId } = createUser(u.username, hash, u.role);
     if (u.role === "admin") continue;
 

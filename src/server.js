@@ -1,7 +1,6 @@
 import express from "express";
 import session from "express-session";
 import path from "path";
-import bcrypt from "bcrypt";
 import { fileURLToPath } from "url";
 import multer from "multer";
 import crypto from "crypto";
@@ -18,8 +17,10 @@ import {
   deleteBook,
   addLog,
   getLogs,
+  getBookByIdUnsafe,
 } from "./db.js";
 import rateLimit from "express-rate-limit";
+import { hashPassword, verifyPassword } from "./passwords.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -65,23 +66,27 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   res.render("login", { error: null });
 });
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 5,
-  skipSuccessfulRequests: true,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-  handler: (req, res) => {
-    logEvent(req, "login_rate_limited", null, String(req.body?.username).slice(0, 50));
-    res
-      .status(429)
-      .render("login", { error: "Too many failed attempts. Try again in 15 minutes." });
-  },
-});
-app.post("/login", loginLimiter, async (req, res) => {
+// No login limiter (identification and authentication failure)
+// const loginLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   limit: 5,
+//   skipSuccessfulRequests: true,
+//   standardHeaders: "draft-7",
+//   legacyHeaders: false,
+//   handler: (req, res) => {
+//     logEvent(req, "login_rate_limited", null, String(req.body?.username).slice(0, 50));
+//     res
+//       .status(429)
+//       .render("login", { error: "Too many failed attempts. Try again in 15 minutes." });
+//   },
+// });
+
+// To fix, comment out line 85, uncomment lines 70-82 and 86
+app.post("/login", async (req, res) => {
+  // app.post("/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const user = getUserByUsername(username);
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+  if (!user || !verifyPassword(password, user.password)) {
     logEvent(req, "login_failed", null, String(username).slice(0, 50));
     return res.status(401).render("login", { error: "Invalid username or password" });
   }
@@ -98,7 +103,9 @@ app.post("/register", async (req, res) => {
   }
 
   try {
-    const hash = await bcrypt.hash(password, 12);
+    const hash = hashPassword(password);
+    // temporary console log to verify password hashes for the screenshots
+    // console.log(username, hash);
     createUser(username, hash);
     logEvent(req, "register", null, username);
   } catch (err) {
@@ -115,9 +122,15 @@ function canView(user, book) {
 }
 
 function findViewableBook(req) {
+  // injection
+  // const rawId = req.query.id;
+  // const book = getBookByIdUnsafe(rawId);
+
+  // To fix, comment out the 2 lines before this and uncomment this
   const id = Number(req.query.id);
   if (!Number.isInteger(id)) return null;
   const book = getBookById(id);
+
   if (!book) return null;
   if (!canView(req.session.user, book)) {
     logEvent(req, "access_denied", `view book ${id}`);
@@ -131,6 +144,8 @@ function requireLogin(req, res, next) {
   next();
 }
 function logEvent(req, event, details = null, username = req.session.user?.username ?? null) {
+  // No security logs (security logging and monitoring failures)
+  // To fix, uncomment this line (line 149):
   addLog(event, username, req.ip, details);
 }
 
@@ -196,10 +211,11 @@ function findOwnedBook(req) {
   if (!Number.isInteger(id)) return null;
   const book = getBookById(id);
   if (!book) return null;
-  if (book.owner_id !== req.session.user.id) {
-    logEvent(req, "access_denied", `modify book ${id}`);
-    return null;
-  }
+  // IDOR:
+  // if (book.owner_id !== req.session.user.id) {
+  //   logEvent(req, "access_denied", `modify book ${id}`);
+  //   return null;
+  // }
   return book;
 }
 
