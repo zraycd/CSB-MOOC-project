@@ -11,7 +11,12 @@
       <div class="nbar logo">Library</div>
       <div>
         <% if (user) { %>
-        <form class="nbar" action="/logout" method="POST"><button type="submit" class="btn">Log out</button></form>
+        <div class="nbar">
+          <% if (user.role === "admin") { %>
+          <div class="btn"><a href="/admin/logs">Logs</a></div>
+          <% } %>
+          <form action="/logout" method="POST"><button type="submit" class="btn">Log out</button></form>
+        </div>
         <% } else { %>
         <div class="nbar">
           <div class="btn"><a href="/register">Register</a></div>
@@ -53,6 +58,16 @@
             <span class="book-title"><%= book.title %></span>
             <span class="book-owner"><%= book.is_public ? "Public" : "Private" %></span>
           </a>
+          <div class="book-actions">
+            <form action="/book/visibility" method="POST">
+              <input type="hidden" name="id" value="<%= book.id %>" />
+              <button type="submit" class="btn small"><%= book.is_public ? "Make private" : "Make public" %></button>
+            </form>
+            <form action="/book/delete" method="POST" onsubmit="return confirm('Delete this book?')">
+              <input type="hidden" name="id" value="<%= book.id %>" />
+              <button type="submit" class="btn small">Delete</button>
+            </form>
+          </div>
         </li>
         <% }) %>
       </ul>

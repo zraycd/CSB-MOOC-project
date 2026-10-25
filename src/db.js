@@ -25,6 +25,15 @@ db.exec(`
         filename text not null,
         is_public integer not null default 0 check (is_public in (0, 1))
     );
+
+    create table if not exists logs(
+        id integer primary key autoincrement,
+        time text not null default (datetime('now')),
+        event text not null,
+        username text,
+        ip text,
+        details text
+    );
 `);
 
 const insertUser = db.prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
@@ -49,7 +58,23 @@ const selectBookById = db.prepare(`
 const selectBooksByOwner = db.prepare(
   "SELECT id, title, is_public FROM books WHERE owner_id = ? ORDER BY id",
 );
+const updateVisibility = db.prepare("UPDATE books SET is_public = ? WHERE id = ?");
+const removeBook = db.prepare("DELETE FROM books WHERE id = ?");
+const insertLog = db.prepare("INSERT INTO logs (event, username, ip, details) VALUES (?, ?, ?, ?)");
+const selectLogs = db.prepare("SELECT * FROM logs ORDER BY id DESC LIMIT 200");
 
+export function addLog(event, username, ip, details) {
+  return insertLog.run(event, username ?? null, ip ?? null, details ?? null);
+}
+export function getLogs() {
+  return selectLogs.all();
+}
+export function setBookVisibility(id, isPublic) {
+  return updateVisibility.run(isPublic ? 1 : 0, id);
+}
+export function deleteBook(id) {
+  return removeBook.run(id);
+}
 export function getBooksByOwner(ownerId) {
   return selectBooksByOwner.all(ownerId);
 }

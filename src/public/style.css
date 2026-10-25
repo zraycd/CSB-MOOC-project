@@ -116,3 +116,28 @@ div > .nbar {
   width: fit-content;
   margin: 15px 0;
 }
+.book {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.book-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn.small {
+  font-size: 1rem;
+  padding: 0 12px;
+  height: 1.8rem;
+}
+.log-table {
+  margin-top: 15px;
+  border-collapse: collapse;
+  width: 100%;
+}
+.log-table th,
+.log-table td {
+  text-align: left;
+  padding: 6px 12px;
+  border-bottom: 1px solid lightgray;
+}

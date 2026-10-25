@@ -14,7 +14,12 @@ import {
   createBook,
   uploadsDir,
   getBooksByOwner,
+  setBookVisibility,
+  deleteBook,
+  addLog,
+  getLogs,
 } from "./db.js";
+import rateLimit from "express-rate-limit";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -47,6 +52,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
+  logEvent(req, "logout");
   req.session.destroy(() => {
     res.redirect("/");
   });
@@ -59,14 +65,28 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   res.render("login", { error: null });
 });
-
-app.post("/login", async (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  skipSuccessfulRequests: true,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  handler: (req, res) => {
+    logEvent(req, "login_rate_limited", null, String(req.body?.username).slice(0, 50));
+    res
+      .status(429)
+      .render("login", { error: "Too many failed attempts. Try again in 15 minutes." });
+  },
+});
+app.post("/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const user = getUserByUsername(username);
   if (!user || !(await bcrypt.compare(password, user.password))) {
+    logEvent(req, "login_failed", null, String(username).slice(0, 50));
     return res.status(401).render("login", { error: "Invalid username or password" });
   }
   req.session.user = { id: user.id, username: user.username, role: user.role };
+  logEvent(req, "login_success");
   res.redirect("/");
 });
 
@@ -80,6 +100,7 @@ app.post("/register", async (req, res) => {
   try {
     const hash = await bcrypt.hash(password, 12);
     createUser(username, hash);
+    logEvent(req, "register", null, username);
   } catch (err) {
     return res.status(409).render("register", { error: "That username is already taken" });
   }
@@ -97,12 +118,29 @@ function findViewableBook(req) {
   const id = Number(req.query.id);
   if (!Number.isInteger(id)) return null;
   const book = getBookById(id);
-  if (!book || !canView(req.session.user, book)) return null;
+  if (!book) return null;
+  if (!canView(req.session.user, book)) {
+    logEvent(req, "access_denied", `view book ${id}`);
+    return null;
+  }
   return book;
 }
 
 function requireLogin(req, res, next) {
   if (!req.session.user) return res.redirect("/login");
+  next();
+}
+function logEvent(req, event, details = null, username = req.session.user?.username ?? null) {
+  addLog(event, username, req.ip, details);
+}
+
+function requireAdmin(req, res, next) {
+  const user = req.session.user;
+  if (!user) return res.redirect("/login");
+  if (user.role !== "admin") {
+    logEvent(req, "access_denied", "admin logs page");
+    return res.status(403).send("Forbidden");
+  }
   next();
 }
 
@@ -148,8 +186,46 @@ app.post("/upload", requireLogin, (req, res) => {
 
     const title = req.file.originalname.slice(0, 100);
     createBook(req.session.user.id, title, req.file.filename, 0);
+    logEvent(req, "upload", title);
     res.redirect("/");
   });
+});
+
+function findOwnedBook(req) {
+  const id = Number(req.body.id);
+  if (!Number.isInteger(id)) return null;
+  const book = getBookById(id);
+  if (!book) return null;
+  if (book.owner_id !== req.session.user.id) {
+    logEvent(req, "access_denied", `modify book ${id}`);
+    return null;
+  }
+  return book;
+}
+
+app.post("/book/visibility", requireLogin, (req, res) => {
+  const book = findOwnedBook(req);
+  if (!book) return res.status(404).send("Book not found");
+  setBookVisibility(book.id, book.is_public ? 0 : 1);
+  logEvent(
+    req,
+    "visibility_changed",
+    `book ${book.id} -> ${book.is_public ? "private" : "public"}`,
+  );
+  res.redirect("/");
+});
+
+app.post("/book/delete", requireLogin, (req, res) => {
+  const book = findOwnedBook(req);
+  if (!book) return res.status(404).send("Book not found");
+  deleteBook(book.id);
+  logEvent(req, "book_deleted", `book ${book.id}`);
+  fs.rmSync(path.join(uploadsDir, book.filename), { force: true });
+  res.redirect("/");
+});
+
+app.get("/admin/logs", requireAdmin, (req, res) => {
+  res.render("logs", { logs: getLogs() });
 });
 
 app.listen(port, () => {
