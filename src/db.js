@@ -46,7 +46,13 @@ const selectBookById = db.prepare(`
   JOIN users ON users.id = books.owner_id
   WHERE books.id = ?
 `);
+const selectBooksByOwner = db.prepare(
+  "SELECT id, title, is_public FROM books WHERE owner_id = ? ORDER BY id",
+);
 
+export function getBooksByOwner(ownerId) {
+  return selectBooksByOwner.all(ownerId);
+}
 export function getBookById(id) {
   return selectBookById.get(id);
 }
@@ -96,4 +102,3 @@ function seed() {
 }
 
 seed();
-console.log(getPublicBooks());

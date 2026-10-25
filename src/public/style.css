@@ -112,3 +112,7 @@ div > .nbar {
   font-size: 0.9rem;
   color: dimgray;
 }
+.upload-btn {
+  width: fit-content;
+  margin: 15px 0;
+}

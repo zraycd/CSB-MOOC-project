@@ -20,25 +20,44 @@
         <% } %>
       </div>
     </nav>
-<div class="public-books">
-  <h1>Discover</h1>
-  <% if (publicBooks.length === 0) { %>
-  <p>No public books yet.</p>
-  <% } else { %>
-  <ul class="book-list">
-    <% publicBooks.forEach(book => { %>
-    <li class="book">
-      <a href="/book?id=<%= book.id %>">
-        <span class="book-title"><%= book.title %></span>
-        <span class="book-owner">by <%= book.owner %></span>
-      </a>
-    </li>
-    <% }) %>
-  </ul>
-  <% } %>
-</div>
+    <div class="public-books">
+      <h1>Discover</h1>
+      <% if (publicBooks.length === 0) { %>
+      <p>No public books yet.</p>
+      <% } else { %>
+      <ul class="book-list">
+        <% publicBooks.forEach(book => { %>
+        <li class="book">
+          <a href="/book?id=<%= book.id %>">
+            <span class="book-title"><%= book.title %></span>
+            <span class="book-owner">by <%= book.owner %></span>
+          </a>
+        </li>
+        <% }) %>
+      </ul>
+      <% } %>
+    </div>
     <div class="user-books">
       <h1>Your books</h1>
+      <% if (!user) { %>
+      <p>You need to <a href="/login">log in</a> to upload books.</p>
+      <% } else { %>
+      <div class="btn upload-btn"><a href="/upload">Upload a book</a></div>
+      <% if (userBooks.length === 0) { %>
+      <p>You haven't uploaded any books yet.</p>
+      <% } else { %>
+      <ul class="book-list">
+        <% userBooks.forEach(book => { %>
+        <li class="book">
+          <a href="/book?id=<%= book.id %>">
+            <span class="book-title"><%= book.title %></span>
+            <span class="book-owner"><%= book.is_public ? "Public" : "Private" %></span>
+          </a>
+        </li>
+        <% }) %>
+      </ul>
+      <% } %>
+      <% } %>
     </div>
   </body>
 </html>

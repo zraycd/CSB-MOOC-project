@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="login-wrap">
+      <form action="/upload" method="post" enctype="multipart/form-data" class="login">
+        <div>
+          <label for="pdf">PDF file</label>
+          <input type="file" name="pdf" id="pdf" accept="application/pdf" />
+        </div>
+        <input type="submit" value="Upload" class="btn" />
+      </form>
+      <div class="alternative"><a href="/">Back to library</a></div>
+      <% if (error) { %>
+      <p class="error"><%= error %></p>
+      <% } %>
+    </div>
+  </body>
+</html>

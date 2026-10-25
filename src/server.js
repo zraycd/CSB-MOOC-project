@@ -3,7 +3,18 @@ import session from "express-session";
 import path from "path";
 import bcrypt from "bcrypt";
 import { fileURLToPath } from "url";
-import { createUser, getUserByUsername, getPublicBooks, getBookById, uploadsDir } from "./db.js";
+import multer from "multer";
+import crypto from "crypto";
+import fs from "fs";
+import {
+  createUser,
+  getUserByUsername,
+  getPublicBooks,
+  getBookById,
+  createBook,
+  uploadsDir,
+  getBooksByOwner,
+} from "./db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +39,11 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  res.render("index", { publicBooks: getPublicBooks() });
+  const user = req.session.user;
+  res.render("index", {
+    publicBooks: getPublicBooks(),
+    userBooks: user ? getBooksByOwner(user.id) : [],
+  });
 });
 
 app.post("/logout", (req, res) => {
@@ -86,6 +101,20 @@ function findViewableBook(req) {
   return book;
 }
 
+function requireLogin(req, res, next) {
+  if (!req.session.user) return res.redirect("/login");
+  next();
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: uploadsDir,
+    filename: (req, file, cb) => cb(null, crypto.randomUUID() + ".pdf"),
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, file.mimetype === "application/pdf"),
+});
+
 app.get("/book", (req, res) => {
   const book = findViewableBook(req);
   if (!book) return res.status(404).send("Book not found");
@@ -96,6 +125,31 @@ app.get("/book/file", (req, res) => {
   const book = findViewableBook(req);
   if (!book) return res.status(404).send("Book not found");
   res.sendFile(path.join(uploadsDir, book.filename));
+});
+
+app.get("/upload", requireLogin, (req, res) => {
+  res.render("upload", { error: null });
+});
+
+app.post("/upload", requireLogin, (req, res) => {
+  upload.single("pdf")(req, res, (err) => {
+    const fail = (msg) => res.status(400).render("upload", { error: msg });
+
+    if (err || !req.file) return fail("Please choose a PDF file under 5 MB");
+
+    const header = Buffer.alloc(5);
+    const fd = fs.openSync(req.file.path, "r");
+    fs.readSync(fd, header, 0, 5, 0);
+    fs.closeSync(fd);
+    if (header.toString() !== "%PDF-") {
+      fs.unlinkSync(req.file.path);
+      return fail("That file is not a valid PDF");
+    }
+
+    const title = req.file.originalname.slice(0, 100);
+    createBook(req.session.user.id, title, req.file.filename, 0);
+    res.redirect("/");
+  });
 });
 
 app.listen(port, () => {
