@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= book.title %></title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <nav>
+      <div class="nbar logo">
+        <a href="/" style="color: inherit; text-decoration: none">Library</a>
+      </div>
+    </nav>
+    <div class="public-books">
+      <h1><%= book.title %></h1>
+      <p>Uploaded by <%= book.owner %></p>
+      <p><%= book.is_public ? "Public" : "Private" %></p>
+      <div class="btn" style="width: fit-content; margin-top: 15px">
+        <a href="/book/file?id=<%= book.id %>">Open PDF</a>
+      </div>
+    </div>
+  </body>
+</html>

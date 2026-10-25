@@ -3,7 +3,7 @@ import session from "express-session";
 import path from "path";
 import bcrypt from "bcrypt";
 import { fileURLToPath } from "url";
-import { createUser, getUserByUsername } from "./db.js";
+import { createUser, getUserByUsername, getPublicBooks, getBookById, uploadsDir } from "./db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  res.render("index");
+  res.render("index", { publicBooks: getPublicBooks() });
 });
 
 app.post("/logout", (req, res) => {
@@ -38,28 +38,64 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("register");
-});
-
-app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
-  const hash = await bcrypt.hash(password, 12);
-  createUser(username, hash);
-  res.redirect("/login");
+  res.render("register", { error: null });
 });
 
 app.get("/login", (req, res) => {
-  res.render("login");
+  res.render("login", { error: null });
 });
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = getUserByUsername(username);
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).send("Invalid credentials");
+    return res.status(401).render("login", { error: "Invalid username or password" });
   }
-  req.session.user = { id: user.id, username: user.username };
+  req.session.user = { id: user.id, username: user.username, role: user.role };
   res.redirect("/");
+});
+
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).render("register", { error: "Username and password are required" });
+  }
+
+  try {
+    const hash = await bcrypt.hash(password, 12);
+    createUser(username, hash);
+  } catch (err) {
+    return res.status(409).render("register", { error: "That username is already taken" });
+  }
+
+  res.redirect("/login");
+});
+
+function canView(user, book) {
+  if (book.is_public === 1) return true;
+  if (!user) return false;
+  return user.id === book.owner_id || user.role === "admin";
+}
+
+function findViewableBook(req) {
+  const id = Number(req.query.id);
+  if (!Number.isInteger(id)) return null;
+  const book = getBookById(id);
+  if (!book || !canView(req.session.user, book)) return null;
+  return book;
+}
+
+app.get("/book", (req, res) => {
+  const book = findViewableBook(req);
+  if (!book) return res.status(404).send("Book not found");
+  res.render("book", { book });
+});
+
+app.get("/book/file", (req, res) => {
+  const book = findViewableBook(req);
+  if (!book) return res.status(404).send("Book not found");
+  res.sendFile(path.join(uploadsDir, book.filename));
 });
 
 app.listen(port, () => {

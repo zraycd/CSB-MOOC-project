@@ -8,17 +8,37 @@
   </head>
   <body>
     <nav>
-      <div class="nbar">Library</div>
+      <div class="nbar logo">Library</div>
       <div>
         <% if (user) { %>
-        <form class="nbar" action="/logout" method="POST"><button type="submit">Log out</button></form>
+        <form class="nbar" action="/logout" method="POST"><button type="submit" class="btn">Log out</button></form>
         <% } else { %>
         <div class="nbar">
-          <div><a href="/register">Register</a></div>
-          <div><a href="/login">Log in</a></div>
+          <div class="btn"><a href="/register">Register</a></div>
+          <div class="btn"><a href="/login">Log in</a></div>
         </div>
         <% } %>
       </div>
     </nav>
+<div class="public-books">
+  <h1>Discover</h1>
+  <% if (publicBooks.length === 0) { %>
+  <p>No public books yet.</p>
+  <% } else { %>
+  <ul class="book-list">
+    <% publicBooks.forEach(book => { %>
+    <li class="book">
+      <a href="/book?id=<%= book.id %>">
+        <span class="book-title"><%= book.title %></span>
+        <span class="book-owner">by <%= book.owner %></span>
+      </a>
+    </li>
+    <% }) %>
+  </ul>
+  <% } %>
+</div>
+    <div class="user-books">
+      <h1>Your books</h1>
+    </div>
   </body>
 </html>

@@ -19,6 +19,10 @@
         </div>
         <input type="submit" value="Log in" class="btn" />
       </form>
+      <div class="alternative">Don't have an account yet? <a href="/register">Register</a></div>
+      <% if (error) { %>
+      <p class="error"><%= error %></p>
+      <% } %>
     </div>
   </body>
 </html>

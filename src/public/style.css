@@ -1,6 +1,7 @@
 * {
   margin: 0;
   padding: 0;
+  font-family: sans-serif;
 }
 body {
   height: 100dvh;
@@ -33,8 +34,10 @@ div > .nbar {
   height: 100%;
   width: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 10px;
 }
 .login {
   font-size: 1.5rem;
@@ -69,4 +72,43 @@ div > .nbar {
 }
 .btn:active {
   background-color: rgb(197, 113, 127);
+}
+.btn > a {
+  all: unset;
+}
+.error {
+  color: red;
+}
+.logo {
+  font-size: 2.5rem;
+}
+.public-books,
+.user-books {
+  padding: 20px 5dvw;
+}
+.book-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+}
+.book a {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 15px 20px;
+  min-width: 180px;
+  color: black;
+  text-decoration: none;
+  background-color: lightgray;
+  border: 2px solid gray;
+  border-radius: 10px;
+}
+.book-title {
+  font-weight: bold;
+}
+.book-owner {
+  font-size: 0.9rem;
+  color: dimgray;
 }

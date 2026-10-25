@@ -8,7 +8,7 @@
   </head>
   <body>
     <div class="login-wrap">
-      <form action="/login" method="post" class="login">
+      <form action="/register" method="post" class="login">
         <div>
           <label for="username">Username</label>
           <input type="text" name="username" id="username" />
@@ -19,6 +19,10 @@
         </div>
         <input type="submit" value="Register" class="btn" />
       </form>
+      <div class="alternative">Already a user? <a href="/login">Log in</a> instead</div>
+      <% if (error) { %>
+      <p class="error"><%= error %></p>
+      <% } %>
     </div>
   </body>
 </html>

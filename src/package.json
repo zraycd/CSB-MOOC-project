@@ -1,5 +1,6 @@
 {
   "name": "csb-mooc-project",
+  "type": "module",
   "version": "1.0.0",
   "description": "The final project for the CSB MOOC course",
   "main": "server.js",
