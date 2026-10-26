@@ -123,13 +123,13 @@ function canView(user, book) {
 
 function findViewableBook(req) {
   // injection
-  // const rawId = req.query.id;
-  // const book = getBookByIdUnsafe(rawId);
+  const rawId = req.query.id;
+  const book = getBookByIdUnsafe(rawId);
 
   // To fix, comment out the 2 lines before this and uncomment this
-  const id = Number(req.query.id);
-  if (!Number.isInteger(id)) return null;
-  const book = getBookById(id);
+  // const id = Number(req.query.id);
+  // if (!Number.isInteger(id)) return null;
+  // const book = getBookById(id);
 
   if (!book) return null;
   if (!canView(req.session.user, book)) {
@@ -146,7 +146,7 @@ function requireLogin(req, res, next) {
 function logEvent(req, event, details = null, username = req.session.user?.username ?? null) {
   // No security logs (security logging and monitoring failures)
   // To fix, uncomment this line (line 149):
-  addLog(event, username, req.ip, details);
+  // addLog(event, username, req.ip, details);
 }
 
 function requireAdmin(req, res, next) {
@@ -211,7 +211,7 @@ function findOwnedBook(req) {
   if (!Number.isInteger(id)) return null;
   const book = getBookById(id);
   if (!book) return null;
-  // IDOR:
+  // IDOR fix:
   // if (book.owner_id !== req.session.user.id) {
   //   logEvent(req, "access_denied", `modify book ${id}`);
   //   return null;
